@@ -181,12 +181,12 @@ while True:
     cv2.imshow(winName, newsat)
 
     if keyboard.is_pressed('h'):
-        time.sleep(0.08)
+        time.sleep(0.1)
         if keyboard.is_pressed('h') is False:
             hudstate += 1
 
     if keyboard.is_pressed('a'):
-        time.sleep(0.08)
+        time.sleep(0.1)
         if keyboard.is_pressed('a') is False:
             armed = not armed
 
