@@ -1,136 +1,127 @@
+import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QImage
+from rawGuiSetup import Ui_MainWindow
+from trackerOnly import *
+import trackerOnly
 
-import gs_back
+class updateUI(QtWidgets.QWidget):
+    def __init__(self):
+        QtWidgets.QWidget.__init__(self)
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1280, 720)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
-        MainWindow.setSizePolicy(sizePolicy)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
-        self.centralwidget.setSizePolicy(sizePolicy)
-        self.centralwidget.setObjectName("centralwidget")
-        self.frame = QtWidgets.QFrame(self.centralwidget)
-        self.frame.setGeometry(QtCore.QRect(960, 250, 320, 426))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
-        self.frame.setSizePolicy(sizePolicy)
-        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame.setObjectName("frame")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.frame)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.trackArm = QtWidgets.QPushButton(self.frame)
-        self.trackArm.setObjectName("trackArm")
-        self.verticalLayout.addWidget(self.trackArm)
-        self.GPSframe = QtWidgets.QFrame(self.frame)
-        self.GPSframe.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.GPSframe.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.GPSframe.setObjectName("GPSframe")
-        self.gridLayout = QtWidgets.QGridLayout(self.GPSframe)
-        self.gridLayout.setObjectName("gridLayout")
-        self.label_3 = QtWidgets.QLabel(self.GPSframe)
-        self.label_3.setObjectName("label_3")
-        self.gridLayout.addWidget(self.label_3, 2, 0, 1, 1)
-        self.LonCord = QtWidgets.QLabel(self.GPSframe)
-        self.LonCord.setObjectName("LonCord")
-        self.gridLayout.addWidget(self.LonCord, 2, 1, 1, 1)
-        self.label_2 = QtWidgets.QLabel(self.GPSframe)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
-        self.label_2.setSizePolicy(sizePolicy)
-        self.label_2.setObjectName("label_2")
-        self.gridLayout.addWidget(self.label_2, 1, 0, 1, 1)
-        self.label = QtWidgets.QLabel(self.GPSframe)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy)
-        self.label.setObjectName("label")
-        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
-        self.LatCord = QtWidgets.QLabel(self.GPSframe)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.LatCord.sizePolicy().hasHeightForWidth())
-        self.LatCord.setSizePolicy(sizePolicy)
-        self.LatCord.setObjectName("LatCord")
-        self.gridLayout.addWidget(self.LatCord, 1, 1, 1, 1)
-        self.verticalLayout.addWidget(self.GPSframe)
-        self.tracker = QtWidgets.QLabel(self.frame)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.tracker.sizePolicy().hasHeightForWidth())
-        self.tracker.setSizePolicy(sizePolicy)
-        self.tracker.setText("")
-        self.tracker.setPixmap(QtGui.QPixmap("sat3.png"))
-        self.tracker.setScaledContents(True)
-        self.tracker.setObjectName("tracker")
-        self.verticalLayout.addWidget(self.tracker)
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1280, 21))
-        self.menubar.setObjectName("menubar")
-        self.menuFile = QtWidgets.QMenu(self.menubar)
-        self.menuFile.setObjectName("menuFile")
-        self.menuEdit = QtWidgets.QMenu(self.menubar)
-        self.menuEdit.setObjectName("menuEdit")
-        self.menuDisplay_Settings = QtWidgets.QMenu(self.menubar)
-        self.menuDisplay_Settings.setObjectName("menuDisplay_Settings")
-        self.menuTelemetry = QtWidgets.QMenu(self.menubar)
-        self.menuTelemetry.setObjectName("menuTelemetry")
-        self.menuCOnfig = QtWidgets.QMenu(self.menubar)
-        self.menuCOnfig.setObjectName("menuCOnfig")
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
-        self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuEdit.menuAction())
-        self.menubar.addAction(self.menuDisplay_Settings.menuAction())
-        self.menubar.addAction(self.menuTelemetry.menuAction())
-        self.menubar.addAction(self.menuCOnfig.menuAction())
+        self.trackerF()
 
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+    def trackerF(self):
+        hudstate = 0
+        armed = True
 
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "RDT Ground Station"))
-        MainWindow.setWindowIcon(QIcon('RDTlogo.png'))
-        self.trackArm.setText(_translate("MainWindow", "Arm/Disarm"))
-        self.label_3.setText(_translate("MainWindow", "LON"))
-        self.LonCord.setText(_translate("MainWindow", "TextLabel"))
-        self.label_2.setText(_translate("MainWindow", "LAT"))
-        self.label.setText(_translate("MainWindow", "Current Position"))
-        self.LatCord.setText(_translate("MainWindow", "TextLabel"))
-        self.menuFile.setTitle(_translate("MainWindow", "File"))
-        self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
-        self.menuDisplay_Settings.setTitle(_translate("MainWindow", "Display"))
-        self.menuTelemetry.setTitle(_translate("MainWindow", "Telemetry"))
-        self.menuCOnfig.setTitle(_translate("MainWindow", "Config"))
+        blinkc = 0
+        mrpix = [padx, pady]  # Recent pixel cords matrix
+        mrcord = [round(lp[0], 4), round(lp[1], 4)]  # Recent cords matrix
+        #time.sleep(0.05)  # (0.05 is good)
+        newsat = sat.copy()  # Draw on clone if it's temporary (cords, dots, etc)
+        now = datetime.now()
+        ct = now.strftime("%I:%M:%S %p")
+        hudDisp(newsat, "", str(ct), (0, 0), (18, 40), (0, 0), (0, 0), (10, 10, 10), 2, 0.9)  # Time HUD
+        cv2.line(newsat, (18, 50), (210, 50), (10, 10, 10), 3)  # Separation line
+        cv2.rectangle(sat, (1, 1), (808, 809), (0, 0, 0), 2)  # Alignment Box
+        cv2.circle(sat, (405, 405), 3, (0, 255, 0), 5)  # Launch pad location
+        # Draw Compass
+        cv2.line(sat, (30, 750), (90, 750), (10, 10, 10), 3)  # Hori
+        cv2.line(sat, (60, 720), (60, 780), (10, 10, 10), 3)  # Vert
+        cv2.putText(sat, "N", (55, 714), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
+        cv2.putText(sat, "S", (54, 796), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
+        cv2.putText(sat, "E", (95, 754), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
+        cv2.putText(sat, "W", (14, 754), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
 
+        if armed:
+            cordgen()
+            mrpix[0] = cordgen.pathcord[0]
+            mrpix[1] = cordgen.pathcord[1]
+            mrcord[0] = cordgen.pixcord[0]
+            mrcord[1] = cordgen.pixcord[1]
+            # Drawing HUD
 
-if __name__ == "__main__":
-    import sys
+        if hudstate == 0:  # Decimal Degrees HUD
+            hudDisp(newsat, "Lat:", str(mrcord[0]), (18, 78), (92, 78), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
+            hudDisp(newsat, "Lon:", str(mrcord[1]), (18, 110), (75, 110), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
+            self.LatCord.setText(str(mrcord[0]))
+            self.LonCord.setText(str(mrcord[1]))
+        if hudstate == 1:  # Degrees Minutes HUD
+            # Decimal degrees to Degrees minutes conversion
+            dmla = str(math.floor(mrcord[0])) + " " + str(round((mrcord[0] % 1) * 60, 3))
+            dmlo = str(math.ceil(mrcord[1])) + " " + str(abs(round((mrcord[1] % 1) * 60 - 60, 3)))
+            self.LatCord.setText(str(mrcord[0]))
+            self.LonCord.setText(str(mrcord[1]))
+            hudDisp(newsat, "Lat:", str(dmla), (18, 78), (92, 78), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
+            hudDisp(newsat, "Lon:", str(dmlo), (18, 110), (75, 110), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
+        if hudstate == 2:  # Distnace HUD
+            disx = rpathx - padx
+            disy = rpathy - pady
+            try:
+                deg = round((math.degrees(math.atan(disy / disx))))
+            except ZeroDivisionError:
+                deg = 0
+            if disx < 0:  # West
+                dir2 = "W"
+            else:  # East
+                dir2 = "E"
+            if disy > 0 and dir2 == "E":  # SE
+                dir1 = "S"
+                deg += 90
+            elif disy > 0 and dir2 == "W":  # SW
+                dir1 = "S"
+                deg += 270
+            elif disy < 0 and dir2 == "E":  # NE
+                dir1 = "N"
+                deg = 90 + deg
+            elif disy < 0 and dir2 == "W":  # NW
+                dir1 = "N"
+                deg += 270
+            else:
+                dir1 = "N"
+            direct = str(deg) + " " + dir1 + dir2
+            dist = round(math.sqrt((disx ** 2) + (disy ** 2)), 2)
+            dist2mile = round((dist / padx * 3.2), 2)
+            hudDisp(newsat, "Distance: ", str(str(dist2mile) + " mi"), (18, 78), (126, 78), (0, 0), (0, 0),
+                    (255, 200, 0), 2, 0.70)
+            hudDisp(newsat, "Direction: ", direct, (18, 110), (126, 110), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
+            cv2.line(newsat, (padx, pady), mrpix, (0, 240, 255), 3)  # Distance line
+        if hudstate > 2:
+            hudstate = 0
+
+        # Drawing location dot
+        cv2.circle(sat, mrpix, 1, (0, 120, 255), 5)  # Tracked path
+        cv2.circle(newsat, mrpix, 1, (0, 0, 255), 5)  # Recent cords
+        if blinkc % 10 < 5:  # Blinking dot border
+            cv2.circle(newsat, mrpix, 12, (0, 0, 255), 2)
+            cv2.circle(newsat, mrpix, 2, (0, 0, 255), 5)
+        blinkc += 1
+
+        if armed is False:
+            hudDisp(newsat, "Disarmed", "", (18, 142), (0, 0), (0, 0), (0, 0), (0, 10, 255), 2, 0.7)
+
+        #cv2.imshow(winName, newsat)
+
+        if keyboard.is_pressed('h'):
+            time.sleep(0.1)
+            if keyboard.is_pressed('h') is False:
+                hudstate += 1
+
+        if keyboard.is_pressed('a'):
+            time.sleep(0.1)
+            if keyboard.is_pressed('a') is False:
+                armed = not armed
+
+        im2qt = QImage(newsat,newsat.shape[1],newsat.shape[0],newsat.strides[0],QImage.Format_BGR888)
+        self.tracker.setPixmap(QtGui.QPixmap(im2qt))
+
+def setUpWindow():
     app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
+    ex = Ui_MainWindow()
+    w = QtWidgets.QMainWindow()
+    ex.setupUi(w)
+    w.show()
     sys.exit(app.exec_())
