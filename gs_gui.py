@@ -16,7 +16,6 @@ class updateUI(QtWidgets.QWidget):
     def trackerF(self):
         hudstate = 0
         armed = True
-
         blinkc = 0
         mrpix = [padx, pady]  # Recent pixel cords matrix
         mrcord = [round(lp[0], 4), round(lp[1], 4)]  # Recent cords matrix
@@ -47,14 +46,14 @@ class updateUI(QtWidgets.QWidget):
         if hudstate == 0:  # Decimal Degrees HUD
             hudDisp(newsat, "Lat:", str(mrcord[0]), (18, 78), (92, 78), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
             hudDisp(newsat, "Lon:", str(mrcord[1]), (18, 110), (75, 110), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
-            self.LatCord.setText(str(mrcord[0]))
-            self.LonCord.setText(str(mrcord[1]))
+            self.ui.LonCord.setText(str(mrcord[0]))
+            self.ui.LonCord.setText(str(mrcord[1]))
         if hudstate == 1:  # Degrees Minutes HUD
             # Decimal degrees to Degrees minutes conversion
             dmla = str(math.floor(mrcord[0])) + " " + str(round((mrcord[0] % 1) * 60, 3))
             dmlo = str(math.ceil(mrcord[1])) + " " + str(abs(round((mrcord[1] % 1) * 60 - 60, 3)))
-            self.LatCord.setText(str(mrcord[0]))
-            self.LonCord.setText(str(mrcord[1]))
+            self.ui.LatCord.setText(str(mrcord[0]))
+            self.ui.LonCord.setText(str(mrcord[1]))
             hudDisp(newsat, "Lat:", str(dmla), (18, 78), (92, 78), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
             hudDisp(newsat, "Lon:", str(dmlo), (18, 110), (75, 110), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
         if hudstate == 2:  # Distnace HUD
@@ -102,8 +101,6 @@ class updateUI(QtWidgets.QWidget):
 
         if armed is False:
             hudDisp(newsat, "Disarmed", "", (18, 142), (0, 0), (0, 0), (0, 0), (0, 10, 255), 2, 0.7)
-
-        #cv2.imshow(winName, newsat)
 
         if keyboard.is_pressed('h'):
             time.sleep(0.1)

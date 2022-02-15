@@ -10,7 +10,6 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -131,7 +130,6 @@ class Ui_MainWindow(object):
         self.menuDisplay_Settings.setTitle(_translate("MainWindow", "Display"))
         self.menuTelemetry.setTitle(_translate("MainWindow", "Telemetry"))
         self.menuCOnfig.setTitle(_translate("MainWindow", "Config"))
-
 
 if __name__ == "__main__":
     import sys
