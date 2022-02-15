@@ -47,6 +47,7 @@ class updateUI(QtWidgets.QWidget):
             hudDisp(newsat, "Lat:", str(mrcord[0]), (18, 78), (92, 78), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
             hudDisp(newsat, "Lon:", str(mrcord[1]), (18, 110), (75, 110), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
             self.ui.LonCord.setText(str(mrcord[0]))
+            print("Gellow")
             self.ui.LonCord.setText(str(mrcord[1]))
         if hudstate == 1:  # Degrees Minutes HUD
             # Decimal degrees to Degrees minutes conversion
