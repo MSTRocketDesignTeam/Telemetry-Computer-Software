@@ -85,7 +85,6 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.tracker.sizePolicy().hasHeightForWidth())
         self.tracker.setSizePolicy(sizePolicy)
         self.tracker.setText("")
-        self.tracker.setPixmap(QtGui.QPixmap("imgs/sat3.png"))
         self.tracker.setScaledContents(True)
         self.tracker.setObjectName("tracker")
         self.verticalLayout.addWidget(self.tracker)

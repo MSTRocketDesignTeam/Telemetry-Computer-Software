@@ -1,123 +1,151 @@
+import csv
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QIcon, QImage
-from rawGuiSetup import Ui_MainWindow
-from trackerOnly import *
-import trackerOnly
+import time
+from datetime import datetime, date, timezone
+import datetime
 
-class updateUI(QtWidgets.QWidget):
+import pytz
+from pytz import timezone
+from datetime import datetime, timezone
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PyQt5.QtCore import *
+from PyQt5.QtGui import QIcon, QImage, QPixmap
+from PyQt5.QtWidgets import QApplication, QWidget
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
+# from rawGuiSetup import Ui_MainWindow
+import cv2
+
+import keyboard
+import math
+import random as r
+from PyQt5.QtWidgets import *
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib import style
+
+class RDT_GS_GUI(QtWidgets.QMainWindow):
     def __init__(self):
-        QtWidgets.QWidget.__init__(self)
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
+        QtWidgets.QMainWindow.__init__(self)
+        self.ui = uic.loadUi('qtdesignerRaw.ui', self)
 
-        self.trackerF()
+        dateL = date.today().strftime("%m / %d / %Y")
+        self.date.setText(dateL)
 
-    def trackerF(self):
-        hudstate = 0
-        armed = True
-        blinkc = 0
-        mrpix = [padx, pady]  # Recent pixel cords matrix
-        mrcord = [round(lp[0], 4), round(lp[1], 4)]  # Recent cords matrix
-        #time.sleep(0.05)  # (0.05 is good)
-        newsat = sat.copy()  # Draw on clone if it's temporary (cords, dots, etc)
-        now = datetime.now()
-        ct = now.strftime("%I:%M:%S %p")
-        hudDisp(newsat, "", str(ct), (0, 0), (18, 40), (0, 0), (0, 0), (10, 10, 10), 2, 0.9)  # Time HUD
-        cv2.line(newsat, (18, 50), (210, 50), (10, 10, 10), 3)  # Separation line
-        cv2.rectangle(sat, (1, 1), (808, 809), (0, 0, 0), 2)  # Alignment Box
-        cv2.circle(sat, (405, 405), 3, (0, 255, 0), 5)  # Launch pad location
-        # Draw Compass
-        cv2.line(sat, (30, 750), (90, 750), (10, 10, 10), 3)  # Hori
-        cv2.line(sat, (60, 720), (60, 780), (10, 10, 10), 3)  # Vert
-        cv2.putText(sat, "N", (55, 714), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
-        cv2.putText(sat, "S", (54, 796), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
-        cv2.putText(sat, "E", (95, 754), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
-        cv2.putText(sat, "W", (14, 754), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
+        self.worker = WorkerThread()
+        self.worker.start()
 
-        if armed:
-            cordgen()
-            mrpix[0] = cordgen.pathcord[0]
-            mrpix[1] = cordgen.pathcord[1]
-            mrcord[0] = cordgen.pixcord[0]
-            mrcord[1] = cordgen.pixcord[1]
-            # Drawing HUD
-        if hudstate == 0:  # Decimal Degrees HUD
-            hudDisp(newsat, "Lat:", str(mrcord[0]), (18, 78), (92, 78), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
-            hudDisp(newsat, "Lon:", str(mrcord[1]), (18, 110), (75, 110), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
-            self.ui.LonCord.setText(str(mrcord[0]))
-            self.ui.LonCord.setText(str(mrcord[1]))
-        if hudstate == 1:  # Degrees Minutes HUD
-            # Decimal degrees to Degrees minutes conversion
-            dmla = str(math.floor(mrcord[0])) + " " + str(round((mrcord[0] % 1) * 60, 3))
-            dmlo = str(math.ceil(mrcord[1])) + " " + str(abs(round((mrcord[1] % 1) * 60 - 60, 3)))
-            self.ui.LatCord.setText(str(mrcord[0]))
-            self.ui.LonCord.setText(str(mrcord[1]))
-            hudDisp(newsat, "Lat:", str(dmla), (18, 78), (92, 78), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
-            hudDisp(newsat, "Lon:", str(dmlo), (18, 110), (75, 110), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
-        if hudstate == 2:  # Distnace HUD
-            disx = rpathx - padx
-            disy = rpathy - pady
-            try:
-                deg = round((math.degrees(math.atan(disy / disx))))
-            except ZeroDivisionError:
-                deg = 0
-            if disx < 0:  # West
-                dir2 = "W"
-            else:  # East
-                dir2 = "E"
-            if disy > 0 and dir2 == "E":  # SE
-                dir1 = "S"
-                deg += 90
-            elif disy > 0 and dir2 == "W":  # SW
-                dir1 = "S"
-                deg += 270
-            elif disy < 0 and dir2 == "E":  # NE
-                dir1 = "N"
-                deg = 90 + deg
-            elif disy < 0 and dir2 == "W":  # NW
-                dir1 = "N"
-                deg += 270
+        self.worker.up_dataacqst.connect(self.upData)
+        self.worker.up_telemst.connect(self.upTelem)
+        self.worker.up_power.connect(self.upPow)
+        self.worker.up_pyro.connect(self.upPyro)
+        self.worker.up_time.connect(self.upTime)
+        self.worker.up_MET.connect(self.upMET)
+        self.worker.up_UTC.connect(self.upUTC)
+
+        self.actionData.triggered.connect(self.fileData)
+        self.actionModule_Status.triggered.connect(self.fileMS)
+        self.actionAvionics.triggered.connect(self.fileAvi)
+        self.actionTelemetry.triggered.connect(self.fileTelem)
+        self.actionTracking.triggered.connect(self.fileTrack)
+
+    def upData(self, dataacq):
+        self.dataacqst.setText(dataacq)
+
+    def upTelem(self, telemst):
+        self.telemst.setText(telemst)
+
+    def upPow(self, power):
+        self.powst.setText(power)
+
+    def upPyro(self, pyro):
+        self.pyrost.setText(pyro)
+
+    def upTime(self, timeL):
+        self.loctime.setText(timeL)
+
+    def upMET(self, MET):
+        self.met.setText(MET)
+
+    def upUTC(self, UTC):
+        self.utctime.setText(UTC)
+
+    def fileData(self):
+        fname1 = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')
+        return fname1[0]
+
+    def fileMS(self):
+        fname2 = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')
+
+    def fileAvi(self):
+        fname3 = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')
+
+    def fileTelem(self):
+        fname4 = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')
+
+    def fileTrack(self):
+        fname5 = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')
+
+class WorkerThread(QThread):
+    up_dataacqst = pyqtSignal(str)
+    up_telemst = pyqtSignal(str)
+    up_power = pyqtSignal(str)
+    up_pyro = pyqtSignal(str)
+
+    up_time = pyqtSignal(str)
+    up_MET = pyqtSignal(str)
+    up_UTC = pyqtSignal(str)
+
+    c = True
+    METstart = time.time()
+
+    def run(self):
+        while True:
+            if self.c:
+                dataacqst = "Active"
+                telemst = "Active"
+                power = "Active"
+                pyro = "Active"
             else:
-                dir1 = "N"
-            direct = str(deg) + " " + dir1 + dir2
-            dist = round(math.sqrt((disx ** 2) + (disy ** 2)), 2)
-            dist2mile = round((dist / padx * 3.2), 2)
-            hudDisp(newsat, "Distance: ", str(str(dist2mile) + " mi"), (18, 78), (126, 78), (0, 0), (0, 0),
-                    (255, 200, 0), 2, 0.70)
-            hudDisp(newsat, "Direction: ", direct, (18, 110), (126, 110), (0, 0), (0, 0), (255, 200, 0), 2, 0.70)
-            cv2.line(newsat, (padx, pady), mrpix, (0, 240, 255), 3)  # Distance line
-        if hudstate > 2:
-            hudstate = 0
+                dataacqst = "Inactive"
+                telemst = "Inactive"
+                power = "Inactive"
+                pyro = "Inactive"
 
-        # Drawing location dot
-        cv2.circle(sat, mrpix, 1, (0, 120, 255), 5)  # Tracked path
-        cv2.circle(newsat, mrpix, 1, (0, 0, 255), 5)  # Recent cords
-        if blinkc % 10 < 5:  # Blinking dot border
-            cv2.circle(newsat, mrpix, 12, (0, 0, 255), 2)
-            cv2.circle(newsat, mrpix, 2, (0, 0, 255), 5)
-        blinkc += 1
+            self.up_dataacqst.emit(dataacqst)
+            self.up_telemst.emit(telemst)
+            self.up_power.emit(power)
+            self.up_pyro.emit(pyro)
 
-        if armed is False:
-            hudDisp(newsat, "Disarmed", "", (18, 142), (0, 0), (0, 0), (0, 0), (0, 10, 255), 2, 0.7)
+            with open('dataFiles/dataF.csv') as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    print(row)
 
-        if keyboard.is_pressed('h'):
+            timeNOW = datetime.now(pytz.timezone('US/Central'))
+            timeL = timeNOW.strftime("%I:%M:%S %Z")
+            self.up_time.emit(timeL)
+
+            utcNOW = datetime.now(timezone.utc)
+            utcL = utcNOW.strftime("%I:%M:%S %Z")
+            self.up_UTC.emit(utcL)
+
+            METnew = time.time()
+            metdif = METnew - self.METstart
+            mins = metdif // 60
+            sec = round((metdif % 60))
+            hours = mins // 60
+            mins = mins % 60
+            METl = "{:02d}:{:02d}:{:02d}".format(int(hours), int(mins), sec)
+            self.up_MET.emit(str(METl))
+
+            self.c = not self.c
             time.sleep(0.1)
-            if keyboard.is_pressed('h') is False:
-                hudstate += 1
 
-        if keyboard.is_pressed('a'):
-            time.sleep(0.1)
-            if keyboard.is_pressed('a') is False:
-                armed = not armed
-
-        im2qt = QImage(newsat,newsat.shape[1],newsat.shape[0],newsat.strides[0],QImage.Format_BGR888)
-        self.tracker.setPixmap(QtGui.QPixmap(im2qt))
-
-def setUpWindow():
+if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    ex = Ui_MainWindow()
-    w = QtWidgets.QMainWindow()
-    ex.setupUi(w)
-    w.show()
+    mainWindow = RDT_GS_GUI()
+    mainWindow.show()
     sys.exit(app.exec_())
