@@ -37,13 +37,22 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         self.worker = WorkerThread()
         self.worker.start()
 
+        self.fname1 = None
+
+        # Module Status updates
         self.worker.up_dataacqst.connect(self.upData)
         self.worker.up_telemst.connect(self.upTelem)
         self.worker.up_power.connect(self.upPow)
         self.worker.up_pyro.connect(self.upPyro)
+
+        # Data updates
         self.worker.up_time.connect(self.upTime)
         self.worker.up_MET.connect(self.upMET)
         self.worker.up_UTC.connect(self.upUTC)
+        self.worker.up_alt.connect(self.upAlt)
+        self.worker.up_vel.connect(self.upVel)
+        self.worker.up_accel.connect(self.upAccel)
+        self.worker.up_rollr.connect(self.upRollr)
 
         self.actionData.triggered.connect(self.fileData)
         self.actionModule_Status.triggered.connect(self.fileMS)
@@ -72,21 +81,37 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
     def upUTC(self, UTC):
         self.utctime.setText(UTC)
 
+    def upAlt(self, alt):
+        self.altitude.setText(alt)
+
+    def upVel(self, vel):
+        self.velocity.setText(vel)
+
+    def upAccel(self, accel):
+        self.acceleration.setText(accel)
+
+    def upRollr(self, rollr):
+        self.rollrate.setText(rollr)
+
     def fileData(self):
-        fname1 = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')
-        return fname1[0]
+        global dataFile
+        dataFile = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')[0]
 
     def fileMS(self):
-        fname2 = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')
+        global msFile
+        msFile = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')[0]
 
     def fileAvi(self):
-        fname3 = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')
+        global aviFile
+        aviFile = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')[0]
 
     def fileTelem(self):
-        fname4 = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')
+        global teleFile
+        teleFile = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')[0]
 
     def fileTrack(self):
-        fname5 = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')
+        global trackFile
+        trackFile = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')[0]
 
 class WorkerThread(QThread):
     up_dataacqst = pyqtSignal(str)
@@ -97,6 +122,10 @@ class WorkerThread(QThread):
     up_time = pyqtSignal(str)
     up_MET = pyqtSignal(str)
     up_UTC = pyqtSignal(str)
+    up_alt = pyqtSignal(str)
+    up_vel = pyqtSignal(str)
+    up_accel = pyqtSignal(str)
+    up_rollr = pyqtSignal(str)
 
     c = True
     METstart = time.time()
@@ -119,10 +148,17 @@ class WorkerThread(QThread):
             self.up_power.emit(power)
             self.up_pyro.emit(pyro)
 
-            with open('dataFiles/dataF.csv') as file:
-                reader = csv.reader(file)
-                for row in reader:
-                    print(row)
+            try:
+                with open(dataFile, "r") as file:
+                    reader = csv.reader(file)
+                    for row in reader:
+                        pass
+                    self.up_alt.emit(str(row[1]) + " m")
+                    self.up_vel.emit(str(row[2]) + " m/s")
+                    self.up_accel.emit(str(row[3]) + " m/s\u00b2")
+                    self.up_rollr.emit(str(row[4]) + " \u00B0/s")
+            except:
+                pass
 
             timeNOW = datetime.now(pytz.timezone('US/Central'))
             timeL = timeNOW.strftime("%I:%M:%S %Z")
