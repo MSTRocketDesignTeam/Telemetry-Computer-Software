@@ -1,9 +1,9 @@
 import csv
 import sys
 import time
-from datetime import datetime, date, timezone
-import datetime
+from datetime import date
 
+import cv2
 import pytz
 from pytz import timezone
 from datetime import datetime, timezone
@@ -15,8 +15,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-# from rawGuiSetup import Ui_MainWindow
-import cv2
+
+
 
 import keyboard
 import math
@@ -97,10 +97,6 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         global dataFile
         dataFile = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')[0]
 
-    def fileMS(self):
-        global msFile
-        msFile = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')[0]
-
     def fileAvi(self):
         global aviFile
         aviFile = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')[0]
@@ -127,10 +123,13 @@ class WorkerThread(QThread):
     up_accel = pyqtSignal(str)
     up_rollr = pyqtSignal(str)
 
+    up_Tracker = pyqtSignal(QImage)
+
     c = True
     METstart = time.time()
 
     def run(self):
+        sat = cv2.imread("imgs/sat3.PNG")
         while True:
             if self.c:
                 dataacqst = "Active"
@@ -157,6 +156,21 @@ class WorkerThread(QThread):
                     self.up_vel.emit(str(row[2]) + " m/s")
                     self.up_accel.emit(str(row[3]) + " m/s\u00b2")
                     self.up_rollr.emit(str(row[4]) + " \u00B0/s")
+
+                with open(aviFile, "r") as file:
+                    reader = csv.reader(file)
+                    for row in reader:
+                        pass
+
+                with open(teleFile, "r") as file:
+                    reader = csv.reader(file)
+                    for row in reader:
+                        pass
+
+                with open(trackFile, "r") as file:
+                    reader = csv.reader(file)
+                    for row in reader:
+                        pass
             except:
                 pass
 
