@@ -1,10 +1,2 @@
-1,10
-2,20
-3,30
-4,40
-5,50
-6,60
-7,70
-8,80
-9,90
-10,100
+time(s),bat volt (V),bat temp (C),Data rate (hz),data error rate (%),onboard data storage (%),chrg 1 con(t/f),chrg 2 con (t/f)
+1,4.9,66.84,8.89,0.001,47,TRUE,TRUE

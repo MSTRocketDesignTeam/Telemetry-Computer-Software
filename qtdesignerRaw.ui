@@ -104,17 +104,30 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_8">
-           <property name="text">
-            <string>Data Acquisition:</string>
+         <item row="0" column="5">
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
            </property>
-          </widget>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_9">
            <property name="text">
             <string>Telemetry:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Data Acquisition:</string>
            </property>
           </widget>
          </item>
@@ -125,8 +138,8 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="2">
-          <widget class="QLabel" name="telemst">
+         <item row="0" column="6">
+          <widget class="QLabel" name="powst">
            <property name="text">
             <string>TextLabel</string>
            </property>
@@ -152,26 +165,6 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="6">
-          <widget class="QLabel" name="powst">
-           <property name="text">
-            <string>TextLabel</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="5">
-          <spacer name="horizontalSpacer_2">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
          <item row="0" column="2">
           <widget class="QLabel" name="dataacqst">
            <property name="text">
@@ -179,8 +172,15 @@
            </property>
           </widget>
          </item>
+         <item row="1" column="2">
+          <widget class="QLabel" name="telemst">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="3">
-          <spacer name="verticalSpacer_4">
+          <spacer name="verticalSpacer_5">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -216,35 +216,7 @@
          <item row="1" column="2">
           <widget class="QLabel" name="longcord">
            <property name="text">
-            <string>TextLabel</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_36">
-           <property name="text">
-            <string>Latitude:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QLabel" name="latcord">
-           <property name="text">
-            <string>TextLabel</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="5">
-          <widget class="QLabel" name="dist">
-           <property name="text">
-            <string>TextLabel</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="5">
-          <widget class="QLabel" name="dir">
-           <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
@@ -255,14 +227,55 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="4">
-          <widget class="QLabel" name="label_34">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_36">
            <property name="text">
-            <string>Distance:</string>
+            <string>Latitude:</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="3">
+         <item row="1" column="4">
+          <widget class="QLabel" name="label_35">
+           <property name="text">
+            <string>Direction:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="6">
+          <widget class="QLabel" name="dist">
+           <property name="text">
+            <string>N/A</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="latcord">
+           <property name="text">
+            <string>N/A</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="6">
+          <widget class="QLabel" name="direc">
+           <property name="text">
+            <string>N/A</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="5">
           <spacer name="horizontalSpacer_4">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -275,12 +288,25 @@
            </property>
           </spacer>
          </item>
-         <item row="1" column="4">
-          <widget class="QLabel" name="label_35">
+         <item row="0" column="4">
+          <widget class="QLabel" name="label_34">
            <property name="text">
-            <string>Direction:</string>
+            <string>Distance:</string>
            </property>
           </widget>
+         </item>
+         <item row="0" column="3">
+          <spacer name="verticalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </widget>
@@ -313,28 +339,28 @@
          <item row="0" column="1">
           <widget class="QLabel" name="gnsscount">
            <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
          <item row="2" column="1">
           <widget class="QLabel" name="velunc">
            <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
          <item row="4" column="1">
           <widget class="QLabel" name="sentrx">
            <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
          <item row="1" column="1">
           <widget class="QLabel" name="posunc">
            <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
@@ -362,7 +388,7 @@
          <item row="3" column="1">
           <widget class="QLabel" name="signal">
            <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
@@ -376,7 +402,7 @@
          <item row="5" column="1">
           <widget class="QLabel" name="gnssstatus">
            <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
@@ -425,7 +451,7 @@
          <item row="6" column="1">
           <widget class="QLabel" name="charge2con">
            <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
@@ -439,21 +465,21 @@
          <item row="1" column="1">
           <widget class="QLabel" name="batemp">
            <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
          <item row="2" column="1">
           <widget class="QLabel" name="datarate">
            <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
          <item row="6" column="0">
           <widget class="QLabel" name="label_7">
            <property name="text">
-            <string>Carge 2 Continuity:</string>
+            <string>Charge 2 Continuity:</string>
            </property>
           </widget>
          </item>
@@ -474,14 +500,14 @@
          <item row="3" column="1">
           <widget class="QLabel" name="dataerror">
            <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
          <item row="4" column="1">
           <widget class="QLabel" name="datastor">
            <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
@@ -495,14 +521,14 @@
          <item row="0" column="1">
           <widget class="QLabel" name="batvolt">
            <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
          <item row="5" column="1">
           <widget class="QLabel" name="charge1con">
            <property name="text">
-            <string>TextLabel</string>
+            <string>N/A</string>
            </property>
           </widget>
          </item>
