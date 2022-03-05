@@ -95,7 +95,7 @@ armed = False
 blinkc = 0
 mrpix = [padx, pady]  # Recent pixel cords matrix
 mrcord = [round(lp[0], 4), round(lp[1], 4)]  # Recent cords matrix
-
+'''
 while True:
     time.sleep(0.05)#(0.05 is good)
     newsat = sat.copy()  # Draw on clone if it's temporary (cords, dots, etc)
@@ -119,6 +119,8 @@ while True:
         mrpix[1] = cordgen.pathcord[1]
         mrcord[0] = cordgen.pixcord[0]
         mrcord[1] = cordgen.pixcord[1]
+        print(mrcord)
+        print(mrpix)
         #Drawing HUD
 
     if hudstate == 0: #Decimal Degrees HUD
@@ -190,4 +192,4 @@ while True:
             armed = not armed
 
     if cv2.waitKey(1) == 27:
-        break
+        break '''

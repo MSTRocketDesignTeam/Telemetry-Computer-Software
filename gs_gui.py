@@ -4,22 +4,21 @@ import time
 from datetime import date
 
 import cv2
+import imutils
 import pytz
 from pytz import timezone
 from datetime import datetime, timezone
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PyQt5 import QtGui, QtCore, QtWidgets, uic
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QIcon, QImage, QPixmap
 
 import pyqtgraph as pg
-import numpy as np
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from pyqtgraph.Qt import QtGui, QtCore
+
+import trackerOnly
+from trackerOnly import *
 
 from PyQt5.QtWidgets import *
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from matplotlib import style
-
 
 class RDT_GS_GUI(QtWidgets.QMainWindow):
     def __init__(self):
@@ -48,24 +47,26 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         self.worker.up_Telemetry.connect(self.upTelemetry)
 
         # Tracker updates
-        self.worker.up_Tracking.connect(self.upTracking)
+        #self.worker.up_Tracking.connect(self.upTracking)
+        self.worker.up_TrackingTest.connect(self.upTrackingTest)
+
+        self.worker.up_Tracker.connect(self.upTracker)
 
         # Graphing
         self.worker.up_GraphData.connect(self.drawGraphs)
-
         self.velG.setLabel('bottom', 'Time (s)')
         self.velG.setLabel('left', 'Velocity (m/s)')
-        self.velG.setTitle("Velocity")
+        self.velG.setTitle("Velocity", pen=pg.mkPen('k', width=2))
         self.velG.showGrid(x=True, y=True)
-        self.velG.setBackground('A1FFA2')
+        self.velG.setBackground('DCDCDC')
         self.velG.getAxis('left').setTextPen('k')
         self.velG.getAxis('bottom').setTextPen('k')
 
         self.allaltG.setLabel('bottom', 'Time (s)')
         self.allaltG.setLabel('left', 'Altitude (m)')
-        self.allaltG.setTitle("Altitude")
+        self.allaltG.setTitle("Altitude", pen=pg.mkPen('k', width=2))
         self.allaltG.showGrid(x=True, y=True)
-        self.allaltG.setBackground('A1FFA2')
+        self.allaltG.setBackground('DCDCDC')
         self.allaltG.getAxis('left').setTextPen('k')
         self.allaltG.getAxis('bottom').setTextPen('k')
         self.allaltG.addLegend()
@@ -74,7 +75,7 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         self.allaccG.setLabel('left', 'Acceleration (m/s\u00b2)')
         self.allaccG.setTitle("Acceleration")
         self.allaccG.showGrid(x=True, y=True)
-        self.allaccG.setBackground('A1FFA2')
+        self.allaccG.setBackground('DCDCDC')
         self.allaccG.getAxis('left').setTextPen('k')
         self.allaccG.getAxis('bottom').setTextPen('k')
 
@@ -82,7 +83,7 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         self.allorientG.setLabel('left', 'Roll Rate (\u00B0/s)')
         self.allorientG.setTitle("Roll Rate")
         self.allorientG.showGrid(x=True, y=True)
-        self.allorientG.setBackground('A1FFA2')
+        self.allorientG.setBackground('DCDCDC')
         self.allorientG.getAxis('left').setTextPen('k')
         self.allorientG.getAxis('bottom').setTextPen('k')
 
@@ -161,6 +162,15 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         self.dist.setText(dist)
         self.direc.setText(direc)
 
+    def upTrackingTest(self, lat, long, dist, direc):
+        self.latcord.setText(str(lat))
+        self.longcord.setText(str(long))
+        self.dist.setText(str(dist))
+        self.direc.setText(direc)
+
+    def upTracker(self, image):
+        self.trackerimg.setPixmap(QPixmap.fromImage(image))
+
     # Obtain file source for all data values
     def fileData(self):
         global dataFile
@@ -194,17 +204,88 @@ class WorkerThread(QThread):
 
     # Tracker
     up_Tracking = pyqtSignal(str, str, str, str)
+    up_TrackingTest = pyqtSignal(float, float, float, str)
+
     up_Tracker = pyqtSignal(QImage)
 
     # Graphing
     up_GraphData = pyqtSignal(list, list, list, list, list, list, list)
 
-    c = True
     METstart = time.time()
 
+    c = True
+    armed = True
+    blinkc = 0
+    mrpix = [padx, pady]  # Recent pixel cords matrix
+    mrcord = [round(lp[0], 4), round(lp[1], 4)]  # Recent cords matrix
+
     def run(self):
-        sat = cv2.imread("imgs/sat3.PNG")
         while True:
+            newsat = sat.copy()
+
+            # Draw Compass
+            cv2.line(sat, (30, 750), (90, 750), (10, 10, 10), 3)  # Hori
+            cv2.line(sat, (60, 720), (60, 780), (10, 10, 10), 3)  # Vert
+            cv2.putText(sat, "N", (55, 714), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
+            cv2.putText(sat, "S", (54, 796), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
+            cv2.putText(sat, "E", (95, 754), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
+            cv2.putText(sat, "W", (14, 754), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
+
+            if self.armed:
+                cordgen()
+                self.mrpix[0] = cordgen.pathcord[0]
+                self.mrpix[1] = cordgen.pathcord[1]
+                self.mrcord[0] = cordgen.pixcord[0]
+                self.mrcord[1] = cordgen.pixcord[1]
+                print(mrpix)
+                print(mrcord)
+
+            disx = rpathx - padx
+            disy = rpathy - pady
+            try:
+                deg = round((math.degrees(math.atan(disy / disx))))
+            except ZeroDivisionError:
+                deg = 0
+            if disx < 0:  # West
+                dir2 = "W"
+            else:  # East
+                dir2 = "E"
+            if disy > 0 and dir2 == "E":  # SE
+                dir1 = "S"
+                deg += 90
+            elif disy > 0 and dir2 == "W":  # SW
+                dir1 = "S"
+                deg += 270
+            elif disy < 0 and dir2 == "E":  # NE
+                dir1 = "N"
+                deg = 90 + deg
+            elif disy < 0 and dir2 == "W":  # NW
+                dir1 = "N"
+                deg += 270
+            else:
+                dir1 = "N"
+            direct = str(deg) + " " + dir1 + dir2
+            dist = round(math.sqrt((disx ** 2) + (disy ** 2)), 2)
+            dist2mile = round((dist / padx * 3.2), 2)
+            dist2meters = dist2mile * 1609.34
+            cv2.line(newsat, (padx, pady), mrpix, (0, 240, 255), 3)  # Distance line
+
+            # Drawing location dot
+            cv2.circle(sat, (405, 405), 3, (0, 255, 0), 5) #Launch Pad Location
+            cv2.circle(sat, mrpix, 1, (0, 120, 255), 5)  # Tracked path
+            cv2.circle(newsat, mrpix, 1, (0, 0, 255), 5)  # Recent cords
+            if self.blinkc % 10 < 5:  # Blinking dot border
+                cv2.circle(newsat, mrpix, 12, (0, 0, 255), 2)
+                cv2.circle(newsat, mrpix, 2, (0, 0, 255), 5)
+            self.blinkc += 1
+
+            self.up_TrackingTest.emit(mrcord[0], mrcord[1], dist2meters, direct)
+
+            image = imutils.resize(newsat,width=357)
+            frame = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image = QImage(frame, frame.shape[1],frame.shape[0],frame.strides[0],QImage.Format_RGB888)
+            self.up_Tracker.emit(image)
+
             if self.c:
                 dataacqst = "Active"
                 telemst = "Active"
@@ -217,6 +298,7 @@ class WorkerThread(QThread):
                 pyro = "Inactive"
 
             self.up_Module.emit(dataacqst, telemst, power, pyro)
+
 
             try:
                 with open(dataFile, "r") as file:
