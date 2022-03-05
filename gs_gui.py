@@ -10,9 +10,9 @@ from datetime import datetime, timezone
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QIcon, QImage, QPixmap
-from PyQt5.QtWidgets import QApplication, QWidget
+
+from pyqtgraph import PlotWidget
 import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from PyQt5.QtWidgets import *
@@ -20,10 +20,11 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib import style
 
+
 class RDT_GS_GUI(QtWidgets.QMainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
-        self.ui = uic.loadUi('qtdesignerRaw.ui', self)
+        self.ui = uic.loadUi('rdtGsRaw.ui', self)
 
         dateL = date.today().strftime("%m / %d / %Y")
         self.date.setText(dateL)
@@ -34,42 +35,20 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         self.fname1 = None
 
         # Module Status updates
-        self.worker.up_dataacqst.connect(self.upData)
-        self.worker.up_telemst.connect(self.upTelem)
-        self.worker.up_power.connect(self.upPow)
-        self.worker.up_pyro.connect(self.upPyro)
+        self.worker.up_Module.connect(self.upModule)
 
         # Data updates
-        self.worker.up_time.connect(self.upTime)
-        self.worker.up_MET.connect(self.upMET)
-        self.worker.up_UTC.connect(self.upUTC)
-        self.worker.up_alt.connect(self.upAlt)
-        self.worker.up_vel.connect(self.upVel)
-        self.worker.up_accel.connect(self.upAccel)
-        self.worker.up_rollr.connect(self.upRollr)
+        self.worker.up_Data.connect(self.upData)
+        self.worker.up_Data2.connect(self.upData2)
 
         # Avionics updates
-        self.worker.up_batV.connect(self.upBatv)
-        self.worker.up_batT.connect(self.upBatc)
-        self.worker.up_dataR.connect(self.upDatar)
-        self.worker.up_dataER.connect(self.upDataer)
-        self.worker.up_onbDS.connect(self.upOnbds)
-        self.worker.up_chrg1.connect(self.upChrg1)
-        self.worker.up_chrg2.connect(self.upChrg2)
+        self.worker.up_Avionics.connect(self.upAvionics)
 
         # Telemetry updates
-        self.worker.up_gnss.connect(self.upGnss)
-        self.worker.up_posunc.connect(self.upPosunc)
-        self.worker.up_velunc.connect(self.upVelunc)
-        self.worker.up_signal.connect(self.upSignal)
-        self.worker.up_sentr.connect(self.upSentr)
-        self.worker.up_gnssSt.connect(self.upGnssSt)
+        self.worker.up_Telemetry.connect(self.upTelemetry)
 
         # Tracker updates
-        self.worker.up_lat.connect(self.upLat)
-        self.worker.up_long.connect(self.upLong)
-        self.worker.up_dist.connect(self.upDist)
-        self.worker.up_direc.connect(self.upDirec)
+        self.worker.up_Tracking.connect(self.upTracking)
 
         # Menu buttons
         self.actionData.triggered.connect(self.fileData)
@@ -77,93 +56,51 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         self.actionTelemetry.triggered.connect(self.fileTelem)
         self.actionTracking.triggered.connect(self.fileTrack)
 
+        # Graphing
+
     # Module Status
-    def upData(self, dataacq):
+    def upModule(self, dataacq, telemst, power, pyro):
         self.dataacqst.setText(dataacq)
-
-    def upTelem(self, telemst):
         self.telemst.setText(telemst)
-
-    def upPow(self, power):
         self.powst.setText(power)
-
-    def upPyro(self, pyro):
         self.pyrost.setText(pyro)
 
     # Data
-    def upTime(self, timeL):
-        self.loctime.setText(timeL)
-
-    def upMET(self, MET):
-        self.met.setText(MET)
-
-    def upUTC(self, UTC):
-        self.utctime.setText(UTC)
-
-    def upAlt(self, alt):
+    def upData(self, alt, vel, accel, rollr):
         self.altitude.setText(alt)
-
-    def upVel(self, vel):
         self.velocity.setText(vel)
-
-    def upAccel(self, accel):
         self.acceleration.setText(accel)
-
-    def upRollr(self, rollr):
         self.rollrate.setText(rollr)
 
+    def upData2(self, timeL, UTC, MET):
+        self.loctime.setText(timeL)
+        self.utctime.setText(UTC)
+        self.met.setText(MET)
+
     # Avionics
-    def upBatv(self, batv):
+    def upAvionics(self, batv, batc, datar, dataer, onbds, chrg1, chrg2):
         self.batvolt.setText(batv)
-
-    def upBatc(self, batc):
         self.batemp.setText(batc)
-
-    def upDatar(self, datar):
         self.datarate.setText(datar)
-
-    def upDataer(self, dataer):
         self.dataerror.setText(dataer)
-
-    def upOnbds(self, onbds):
         self.datastor.setText(onbds)
-
-    def upChrg1(self, chrg1):
         self.charge1con.setText(chrg1)
-
-    def upChrg2(self, chrg2):
         self.charge2con.setText(chrg2)
 
     # Telemetry
-    def upGnss(self, gnss):
+    def upTelemetry(self, gnss, posunc, velunc, sig, sentr, gnssst):
         self.gnsscount.setText(gnss)
-
-    def upPosunc(self, posunc):
         self.posunc.setText(posunc)
-
-    def upVelunc(self, velunc):
         self.velunc.setText(velunc)
-
-    def upSignal(self, sig):
         self.signal.setText(sig)
-
-    def upSentr(self, sentr):
         self.sentrx.setText(sentr)
-
-    def upGnssSt(self, gnssst):
         self.gnssstatus.setText(gnssst)
 
     # Tracking
-    def upLat(self, lat):
+    def upTracking(self, lat, long, dist, direc):
         self.latcord.setText(lat)
-
-    def upLong(self, long):
         self.longcord.setText(long)
-
-    def upDist(self, dist):
         self.dist.setText(dist)
-
-    def upDirec(self, direc):
         self.direc.setText(direc)
 
     # Obtain file source for all data values
@@ -185,42 +122,20 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
 
 class WorkerThread(QThread):
     # Module Status
-    up_dataacqst = pyqtSignal(str)
-    up_telemst = pyqtSignal(str)
-    up_power = pyqtSignal(str)
-    up_pyro = pyqtSignal(str)
+    up_Module = pyqtSignal(str, str, str, str)
 
     # Data
-    up_time = pyqtSignal(str)
-    up_MET = pyqtSignal(str)
-    up_UTC = pyqtSignal(str)
-    up_alt = pyqtSignal(str)
-    up_vel = pyqtSignal(str)
-    up_accel = pyqtSignal(str)
-    up_rollr = pyqtSignal(str)
+    up_Data = pyqtSignal(str, str, str, str)
+    up_Data2 = pyqtSignal(str, str, str)
 
     # Avionics
-    up_batV = pyqtSignal(str)
-    up_batT = pyqtSignal(str)
-    up_dataR = pyqtSignal(str)
-    up_dataER = pyqtSignal(str)
-    up_onbDS = pyqtSignal(str)
-    up_chrg1 = pyqtSignal(str)
-    up_chrg2 = pyqtSignal(str)
+    up_Avionics = pyqtSignal(str, str, str, str, str, str, str)
 
     # Telemetry
-    up_gnss = pyqtSignal(str)
-    up_posunc = pyqtSignal(str)
-    up_velunc = pyqtSignal(str)
-    up_signal = pyqtSignal(str)
-    up_sentr = pyqtSignal(str)
-    up_gnssSt = pyqtSignal(str)
+    up_Telemetry = pyqtSignal(str, str, str, str, str, str)
 
     # Tracker
-    up_lat = pyqtSignal(str)
-    up_long = pyqtSignal(str)
-    up_dist = pyqtSignal(str)
-    up_direc = pyqtSignal(str)
+    up_Tracking = pyqtSignal(str, str, str, str)
     up_Tracker = pyqtSignal(QImage)
 
     c = True
@@ -240,20 +155,21 @@ class WorkerThread(QThread):
                 power = "Inactive"
                 pyro = "Inactive"
 
-            self.up_dataacqst.emit(dataacqst)
-            self.up_telemst.emit(telemst)
-            self.up_power.emit(power)
-            self.up_pyro.emit(pyro)
+            self.up_Module.emit(dataacqst, telemst, power, pyro)
 
             try:
                 with open(dataFile, "r") as file:
                     reader = csv.reader(file)
+                    xV = []
+                    yV = []
                     for row in reader:
+                        xV.append(row[0])
+                        yV.append(row[1])
                         pass
-                    self.up_alt.emit(str(row[1]) + " m")
-                    self.up_vel.emit(str(row[2]) + " m/s")
-                    self.up_accel.emit(str(row[3]) + " m/s\u00b2")
-                    self.up_rollr.emit(str(row[4]) + " \u00B0/s")
+                    self.up_Data.emit(str(row[1]) + " m",
+                                      str(row[2]) + " m/s",
+                                      str(row[3]) + " m/s\u00b2",
+                                      str(row[4]) + " \u00B0/s")
             except:
                 pass
 
@@ -262,13 +178,13 @@ class WorkerThread(QThread):
                     reader = csv.reader(file)
                     for row in reader:
                         pass
-                    self.up_batV.emit(str(row[1]) + " V")
-                    self.up_batT.emit(str(row[2]) + " \u00B0C")
-                    self.up_dataR.emit(str(row[3]) + " Hz")
-                    self.up_dataER.emit(str(row[4]) + " %")
-                    self.up_onbDS.emit(str(row[5]) + " %")
-                    self.up_chrg1.emit(str(row[6]))
-                    self.up_chrg2 .emit(str(row[7]))
+                    self.up_Avionics.emit(str(row[1]) + " V",
+                                          str(row[2]) + " \u00B0C",
+                                          str(row[3]) + " Hz",
+                                          str(row[4]) + " %",
+                                          str(row[5]) + " %",
+                                          str(row[6]),
+                                          str(row[7]))
             except:
                 pass
 
@@ -277,12 +193,12 @@ class WorkerThread(QThread):
                     reader = csv.reader(file)
                     for row in reader:
                         pass
-                    self.up_gnss.emit(str(row[1]))
-                    self.up_posunc.emit(str(row[2]) + " m")
-                    self.up_velunc.emit(str(row[3]) + " m/s")
-                    self.up_signal.emit(str(row[4]) + " dBm")
-                    self.up_sentr.emit(str(row[5]))
-                    self.up_gnssSt.emit(str(row[6]))
+                    self.up_Telemetry.emit(str(row[1]),
+                                           str(row[2]) + " m",
+                                           str(row[3]) + " m/s",
+                                           str(row[4]) + " dBm",
+                                           str(row[5]),
+                                           str(row[6]))
             except:
                 pass
 
@@ -291,20 +207,18 @@ class WorkerThread(QThread):
                     reader = csv.reader(file)
                     for row in reader:
                         pass
-                    self.up_lat.emit(str(round(float(row[1]), 6)))
-                    self.up_long.emit(str(round(float(row[2]), 6)))
-                    self.up_dist.emit(str(row[3]) + " m")
-                    self.up_direc.emit(str(row[4]) + " \u00B0")
+                    self.up_Tracking.emit(str(round(float(row[1]), 6)),
+                                          str(round(float(row[2]), 6)),
+                                          str(row[3]) + " m",
+                                          str(row[4]) + " \u00B0")
             except:
                 pass
 
             timeNOW = datetime.now(pytz.timezone('US/Central'))
             timeL = timeNOW.strftime("%I:%M:%S %Z")
-            self.up_time.emit(timeL)
 
             utcNOW = datetime.now(timezone.utc)
             utcL = utcNOW.strftime("%I:%M:%S %Z")
-            self.up_UTC.emit(utcL)
 
             METnew = time.time()
             metdif = METnew - self.METstart
@@ -313,7 +227,8 @@ class WorkerThread(QThread):
             hours = mins // 60
             mins = mins % 60
             METl = "{:02d}:{:02d}:{:02d}".format(int(hours), int(mins), sec)
-            self.up_MET.emit(str(METl))
+
+            self.up_Data2.emit(timeL, utcL, str(METl))
 
             self.c = not self.c
             time.sleep(0.1)
