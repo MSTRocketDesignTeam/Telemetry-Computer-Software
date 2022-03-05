@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QIcon, QImage, QPixmap
 
-from pyqtgraph import PlotWidget
+import pyqtgraph as pg
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -50,13 +50,71 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         # Tracker updates
         self.worker.up_Tracking.connect(self.upTracking)
 
+        # Graphing
+        self.worker.up_GraphData.connect(self.drawGraphs)
+
+        self.velG.setLabel('bottom', 'Time (s)')
+        self.velG.setLabel('left', 'Velocity (m/s)')
+        self.velG.setTitle("Velocity")
+        self.velG.showGrid(x=True, y=True)
+        self.velG.setBackground('A1FFA2')
+        self.velG.getAxis('left').setTextPen('k')
+        self.velG.getAxis('bottom').setTextPen('k')
+
+        self.allaltG.setLabel('bottom', 'Time (s)')
+        self.allaltG.setLabel('left', 'Altitude (m)')
+        self.allaltG.setTitle("Altitude")
+        self.allaltG.showGrid(x=True, y=True)
+        self.allaltG.setBackground('A1FFA2')
+        self.allaltG.getAxis('left').setTextPen('k')
+        self.allaltG.getAxis('bottom').setTextPen('k')
+        self.allaltG.addLegend()
+
+        self.allaccG.setLabel('bottom', 'Time (s)')
+        self.allaccG.setLabel('left', 'Acceleration (m/s\u00b2)')
+        self.allaccG.setTitle("Acceleration")
+        self.allaccG.showGrid(x=True, y=True)
+        self.allaccG.setBackground('A1FFA2')
+        self.allaccG.getAxis('left').setTextPen('k')
+        self.allaccG.getAxis('bottom').setTextPen('k')
+
+        self.allorientG.setLabel('bottom', 'Time (s)')
+        self.allorientG.setLabel('left', 'Roll Rate (\u00B0/s)')
+        self.allorientG.setTitle("Roll Rate")
+        self.allorientG.showGrid(x=True, y=True)
+        self.allorientG.setBackground('A1FFA2')
+        self.allorientG.getAxis('left').setTextPen('k')
+        self.allorientG.getAxis('bottom').setTextPen('k')
+
         # Menu buttons
         self.actionData.triggered.connect(self.fileData)
         self.actionAvionics.triggered.connect(self.fileAvi)
         self.actionTelemetry.triggered.connect(self.fileTelem)
         self.actionTracking.triggered.connect(self.fileTrack)
 
-        # Graphing
+    # Graphs
+    def drawGraphs(self, timeD, yalt, yalt2, yaltav, yvel, yacc, yrollr):
+        timeD = list(map(int, timeD))
+        yalt = list(map(int, yalt))
+        yalt2 = list(map(int, yalt2))
+        yaltav = list(map(int, yaltav))
+        yvel = list(map(int, yvel))
+        yacc = list(map(int, yacc))
+        yrollr = list(map(int, yrollr))
+
+        self.velG.clear()
+        self.velG.plot(timeD,yvel,pen=pg.mkPen('k', width=2))
+
+        self.allaccG.clear()
+        self.allaccG.plot(timeD, yacc, pen=pg.mkPen('k', width=2))
+
+        self.allorientG.clear()
+        self.allorientG.plot(timeD, yrollr, pen=pg.mkPen('k', width=2))
+
+        self.allaltG.clear()
+        self.allaltG.plot(timeD, yalt, pen=pg.mkPen('r', width=2), name='Barometer 1')
+        self.allaltG.plot(timeD, yalt2, pen=pg.mkPen('b', width=2), name='Barometer 2')
+        self.allaltG.plot(timeD, yaltav, pen=pg.mkPen('k', width=2), name='Average')
 
     # Module Status
     def upModule(self, dataacq, telemst, power, pyro):
@@ -106,19 +164,19 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
     # Obtain file source for all data values
     def fileData(self):
         global dataFile
-        dataFile = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')[0]
+        dataFile = QFileDialog.getOpenFileName(self, 'Open File: Data', '', 'CSV Files (*.csv)')[0]
 
     def fileAvi(self):
         global aviFile
-        aviFile = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')[0]
+        aviFile = QFileDialog.getOpenFileName(self, 'Open File: Avionics', '', 'CSV Files (*.csv)')[0]
 
     def fileTelem(self):
         global teleFile
-        teleFile = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')[0]
+        teleFile = QFileDialog.getOpenFileName(self, 'Open File: Telemetry', '', 'CSV Files (*.csv)')[0]
 
     def fileTrack(self):
         global trackFile
-        trackFile = QFileDialog.getOpenFileName(self, 'Open File', '', 'CSV Files (*.csv)')[0]
+        trackFile = QFileDialog.getOpenFileName(self, 'Open File: Tracking', '', 'CSV Files (*.csv)')[0]
 
 class WorkerThread(QThread):
     # Module Status
@@ -137,6 +195,9 @@ class WorkerThread(QThread):
     # Tracker
     up_Tracking = pyqtSignal(str, str, str, str)
     up_Tracker = pyqtSignal(QImage)
+
+    # Graphing
+    up_GraphData = pyqtSignal(list, list, list, list, list, list, list)
 
     c = True
     METstart = time.time()
@@ -160,16 +221,29 @@ class WorkerThread(QThread):
             try:
                 with open(dataFile, "r") as file:
                     reader = csv.reader(file)
-                    xV = []
-                    yV = []
+                    timeD = []
+                    yAlt = []
+                    yAlt2 = []
+                    yAltAv = []
+                    yVel = []
+                    yAcc = []
+                    yRollr = []
+                    next(file)
                     for row in reader:
-                        xV.append(row[0])
-                        yV.append(row[1])
+                        timeD.append(row[0])
+                        yAlt.append(row[1])
+                        yAlt2.append(row[2])
+                        altav = round((int(row[1]) + int(row[2]))/2)
+                        yAltAv.append(str(altav))
+                        yVel.append(row[3])
+                        yAcc.append(row[4])
+                        yRollr.append(row[5])
                         pass
-                    self.up_Data.emit(str(row[1]) + " m",
-                                      str(row[2]) + " m/s",
-                                      str(row[3]) + " m/s\u00b2",
-                                      str(row[4]) + " \u00B0/s")
+                    self.up_Data.emit(row[1] + " m",
+                                      row[3] + " m/s",
+                                      row[4] + " m/s\u00b2",
+                                      row[5] + " \u00B0/s")
+                    self.up_GraphData.emit(timeD, yAlt, yAlt2, yAltAv, yVel, yAcc, yRollr)
             except:
                 pass
 
@@ -178,13 +252,13 @@ class WorkerThread(QThread):
                     reader = csv.reader(file)
                     for row in reader:
                         pass
-                    self.up_Avionics.emit(str(row[1]) + " V",
-                                          str(row[2]) + " \u00B0C",
-                                          str(row[3]) + " Hz",
-                                          str(row[4]) + " %",
-                                          str(row[5]) + " %",
-                                          str(row[6]),
-                                          str(row[7]))
+                    self.up_Avionics.emit(row[1] + " V",
+                                          row[2] + " \u00B0C",
+                                          row[3] + " Hz",
+                                          row[4] + " %",
+                                          row[5] + " %",
+                                          row[6],
+                                          row[7])
             except:
                 pass
 
@@ -193,12 +267,12 @@ class WorkerThread(QThread):
                     reader = csv.reader(file)
                     for row in reader:
                         pass
-                    self.up_Telemetry.emit(str(row[1]),
-                                           str(row[2]) + " m",
-                                           str(row[3]) + " m/s",
-                                           str(row[4]) + " dBm",
-                                           str(row[5]),
-                                           str(row[6]))
+                    self.up_Telemetry.emit(row[1],
+                                           row[2] + " m",
+                                           row[3] + " m/s",
+                                           row[4] + " dBm",
+                                           row[5],
+                                           row[6])
             except:
                 pass
 
@@ -209,8 +283,8 @@ class WorkerThread(QThread):
                         pass
                     self.up_Tracking.emit(str(round(float(row[1]), 6)),
                                           str(round(float(row[2]), 6)),
-                                          str(row[3]) + " m",
-                                          str(row[4]) + " \u00B0")
+                                          row[3] + " m",
+                                          row[4] + " \u00B0")
             except:
                 pass
 
