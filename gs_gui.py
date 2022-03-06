@@ -9,6 +9,7 @@ import pytz
 from pytz import timezone
 from datetime import datetime, timezone
 from PyQt5 import QtGui, QtCore, QtWidgets, uic
+from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QIcon, QImage, QPixmap
 
@@ -31,8 +32,6 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         self.worker = WorkerThread()
         self.worker.start()
 
-        self.fname1 = None
-
         # Module Status updates
         self.worker.up_Module.connect(self.upModule)
 
@@ -49,7 +48,7 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         # Tracker updates
         #self.worker.up_Tracking.connect(self.upTracking)
         self.worker.up_TrackingTest.connect(self.upTrackingTest)
-
+        self.armBut.clicked.connect(self.upArm)
         self.worker.up_Tracker.connect(self.upTracker)
 
         # Graphing
@@ -171,6 +170,16 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
     def upTracker(self, image):
         self.trackerimg.setPixmap(QPixmap.fromImage(image))
 
+    def upArm(self):
+        if self.worker.armed:
+            self.armBut.setStyleSheet('background-color: red')
+            self.armBut.setText("Disarm")
+            self.worker.armed = False
+        else:
+            self.armBut.setStyleSheet('background-color: green')
+            self.armBut.setText("Arm")
+            self.worker.armed = True
+
     # Obtain file source for all data values
     def fileData(self):
         global dataFile
@@ -205,6 +214,7 @@ class WorkerThread(QThread):
     # Tracker
     up_Tracking = pyqtSignal(str, str, str, str)
     up_TrackingTest = pyqtSignal(float, float, float, str)
+    up_Arming = pyqtSignal(bool)
 
     up_Tracker = pyqtSignal(QImage)
 
@@ -214,15 +224,15 @@ class WorkerThread(QThread):
     METstart = time.time()
 
     c = True
-    armed = True
+    armed = False
     blinkc = 0
     mrpix = [padx, pady]  # Recent pixel cords matrix
     mrcord = [round(lp[0], 4), round(lp[1], 4)]  # Recent cords matrix
 
     def run(self):
         while True:
+            print(self.armed)
             newsat = sat.copy()
-
             # Draw Compass
             cv2.line(sat, (30, 750), (90, 750), (10, 10, 10), 3)  # Hori
             cv2.line(sat, (60, 720), (60, 780), (10, 10, 10), 3)  # Vert
@@ -232,13 +242,10 @@ class WorkerThread(QThread):
             cv2.putText(sat, "W", (14, 754), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
 
             if self.armed:
-                cordgen()
-                self.mrpix[0] = cordgen.pathcord[0]
-                self.mrpix[1] = cordgen.pathcord[1]
-                self.mrcord[0] = cordgen.pixcord[0]
-                self.mrcord[1] = cordgen.pixcord[1]
-                print(mrpix)
-                print(mrcord)
+                self.mrpix[0] += 1
+                self.mrpix[1] += 1
+                self.mrcord[0] += 0.01
+                self.mrcord[1] += 0.01
 
             disx = rpathx - padx
             disy = rpathy - pady
@@ -321,7 +328,7 @@ class WorkerThread(QThread):
                         yAcc.append(row[4])
                         yRollr.append(row[5])
                         pass
-                    self.up_Data.emit(row[1] + " m",
+                    self.up_Data.emit(yAltAv[-1] + " m",
                                       row[3] + " m/s",
                                       row[4] + " m/s\u00b2",
                                       row[5] + " \u00B0/s")
