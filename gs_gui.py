@@ -1,23 +1,18 @@
 import csv
 import sys
 import time
-from datetime import date
-
-import cv2
+import keyboard
+import pyqtgraph as pg
 import imutils
 import pytz
+import cv2
+import datetime
+import math
 from pytz import timezone
-from datetime import datetime, timezone
-from PyQt5 import QtGui, QtCore, QtWidgets, uic
-from PyQt5.QtWidgets import QPushButton
+from datetime import datetime, date, timezone
+from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import *
-from PyQt5.QtGui import QIcon, QImage, QPixmap
-
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
-
-import trackerOnly
-from trackerOnly import *
+from PyQt5.QtGui import QImage, QPixmap
 
 from PyQt5.QtWidgets import *
 
@@ -35,10 +30,10 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
 
         self.armBut.setStyleSheet("background-color:#37FF4F;")
         if self.worker.armed:
-            self.armBut.setStyleSheet("background-color:#FF3737;");
+            self.armBut.setStyleSheet("background-color:#FF3737;")
             self.armBut.setText("Disarm")
         else:
-            self.armBut.setStyleSheet("background-color:#37FF4F;");
+            self.armBut.setStyleSheet("background-color:#37FF4F;")
             self.armBut.setText("Arm")
 
         # Module Status updates
@@ -173,7 +168,7 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
     def upTrackingTest(self, lat, long, dist, direc):
         self.latcord.setText(str(lat))
         self.longcord.setText(str(long))
-        self.dist.setText(str(dist))
+        self.dist.setText(str(dist) + " m")
         self.direc.setText(direc)
 
     def upTracker(self, image):
@@ -231,7 +226,19 @@ class WorkerThread(QThread):
     up_GraphData = pyqtSignal(list, list, list, list, list, list, list)
 
     METstart = time.time()
-
+    topl = (37.2138385, -97.797595)
+    botl = (37.1223676, -97.7968443)
+    topr = (37.2117854, -97.6806518)
+    botr = (37.122033, -97.6816494)
+    lp = (37.1676624, -97.7399083)
+    toplat = 37.212
+    botlat = 37.122
+    leftlon = -97.797
+    rightlon = -97.681
+    padx = 405
+    pady = 405
+    xmax = 810
+    ymax = 810
     c = True
     armed = False
     blinkc = 0
@@ -239,8 +246,18 @@ class WorkerThread(QThread):
     mrcord = [round(lp[0], 4), round(lp[1], 4)]  # Recent cords matrix
 
     def run(self):
+        sat = cv2.imread("imgs/sat3.PNG")
         while True:
-            print(self.armed)
+            print(self.mrpix)
+            if self.armed:
+                if keyboard.is_pressed('down'):
+                    self.mrpix[1] = self.mrpix[1] + 2
+                if keyboard.is_pressed('up'):
+                    self.mrpix[1] -= 2
+                if keyboard.is_pressed('left'):
+                    self.mrpix[0] -= 2
+                if keyboard.is_pressed('right'):
+                    self.mrpix[0] += 2
             newsat = sat.copy()
             # Draw Compass
             cv2.line(sat, (30, 750), (90, 750), (10, 10, 10), 3)  # Hori
@@ -250,14 +267,11 @@ class WorkerThread(QThread):
             cv2.putText(sat, "E", (95, 754), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
             cv2.putText(sat, "W", (14, 754), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (10, 10, 10), 2)
 
-            if self.armed:
-                self.mrpix[0] += 1
-                self.mrpix[1] += 1
-                self.mrcord[0] += 0.01
-                self.mrcord[1] += 0.01
+            disx = self.mrpix[0] - self.padx
+            disy = self.mrpix[1] - self.pady
+            mrcordLA = round(abs((self.mrpix[1]/self.ymax)*(self.botlat - self.toplat) + self.toplat), 4)
+            mrcordLO = round(((self.mrpix[0]/self.xmax)*(self.rightlon - self.leftlon) + self.leftlon), 4)
 
-            disx = rpathx - padx
-            disy = rpathy - pady
             try:
                 deg = round((math.degrees(math.atan(disy / disx))))
             except ZeroDivisionError:
@@ -280,25 +294,25 @@ class WorkerThread(QThread):
                 deg += 270
             else:
                 dir1 = "N"
-            direct = str(deg) + " " + dir1 + dir2
+            direct = str(deg) + "\u00B0  " + dir1 + dir2
             dist = round(math.sqrt((disx ** 2) + (disy ** 2)), 2)
-            dist2mile = round((dist / padx * 3.2), 2)
-            dist2meters = dist2mile * 1609.34
-            cv2.line(newsat, (padx, pady), mrpix, (0, 240, 255), 3)  # Distance line
+            dist2mile = round((dist / self.padx * 3.2), 2)
+            dist2meters = round((dist2mile * 1609.34),2)
+            cv2.line(newsat, (self.padx, self.pady), self.mrpix, (0, 240, 255), 3)  # Distance line
 
             # Drawing location dot
             cv2.circle(sat, (405, 405), 3, (0, 255, 0), 5) #Launch Pad Location
-            cv2.circle(sat, mrpix, 1, (0, 120, 255), 5)  # Tracked path
-            cv2.circle(newsat, mrpix, 1, (0, 0, 255), 5)  # Recent cords
+            cv2.circle(sat, self.mrpix, 1, (0, 120, 255), 5)  # Tracked path
+            cv2.circle(newsat, self.mrpix, 1, (0, 0, 255), 5)  # Recent cords
             if self.armed:
                 if self.blinkc % 10 < 5:  # Blinking dot border
-                    cv2.circle(newsat, mrpix, 12, (0, 0, 255), 2)
-                    cv2.circle(newsat, mrpix, 2, (0, 0, 255), 5)
+                    cv2.circle(newsat, self.mrpix, 12, (0, 0, 255), 2)
+                    cv2.circle(newsat, self.mrpix, 2, (0, 0, 255), 5)
             else:
-                cv2.circle(newsat, mrpix, 12, (0, 0, 255), 2)
-                cv2.circle(newsat, mrpix, 2, (0, 0, 255), 5)
+                cv2.circle(newsat, self.mrpix, 12, (0, 0, 255), 2)
+                cv2.circle(newsat, self.mrpix, 2, (0, 0, 255), 5)
             self.blinkc += 1
-            self.up_TrackingTest.emit(mrcord[0], mrcord[1], dist2meters, direct)
+            self.up_TrackingTest.emit(mrcordLA, mrcordLO, dist2meters, direct)
 
             image = imutils.resize(newsat,width=357)
             frame = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
