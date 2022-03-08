@@ -1,4 +1,5 @@
 import csv
+import os
 import sys
 import time
 import keyboard
@@ -8,6 +9,7 @@ import pytz
 import cv2
 import datetime
 import math
+from csv import writer
 from pytz import timezone
 from datetime import datetime, date, timezone
 from PyQt5 import QtWidgets, uic
@@ -164,15 +166,13 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         self.gnssstatus.setText(gnssst)
 
     # Tracking
-    def upTracking(self, lat, long, dist, direc):
+    def upTracking(self, lat, long):
         self.latcord.setText(lat)
         self.longcord.setText(long)
-        self.dist.setText(dist)
-        self.direc.setText(direc)
 
     def upTrackingTest(self, lat, long, dist, direc):
-        self.latcord.setText(str(lat))
-        self.longcord.setText(str(long))
+        self.latcord.setText(str("{:.4f}".format(lat)))
+        self.longcord.setText(str("{:.4f}".format(long)))
         self.dist.setText(str(dist) + " m")
         self.direc.setText(direc)
 
@@ -229,7 +229,7 @@ class WorkerThread(QThread):
     up_Telemetry = pyqtSignal(str, str, str, str, str, str)
 
     # Tracker
-    up_Tracking = pyqtSignal(str, str, str, str)
+    up_Tracking = pyqtSignal(str, str)
     up_TrackingTest = pyqtSignal(float, float, float, str)
     up_Arming = pyqtSignal(bool)
 
@@ -316,20 +316,34 @@ class WorkerThread(QThread):
                 dir2 = "W"
             else:  # East
                 dir2 = "E"
-            if disy > 0 and dir2 == "E":  # SE
+            if disy >= 0 and dir2 == "E":  # SE
                 dir1 = "S"
                 deg += 90
-            elif disy > 0 and dir2 == "W":  # SW
+            elif disy >= 0 and dir2 == "W":  # SW
                 dir1 = "S"
                 deg += 270
-            elif disy < 0 and dir2 == "E":  # NE
+            elif disy <= 0 and dir2 == "E":  # NE
                 dir1 = "N"
                 deg = 90 + deg
-            elif disy < 0 and dir2 == "W":  # NW
+            elif disy <= 0 and dir2 == "W":  # NW
                 dir1 = "N"
                 deg += 270
             else:
                 dir1 = "N"
+            if disx == 0:
+                if dir1 == "N":
+                    deg = 0
+                else:
+                    deg = 180
+                dir2 = ""
+            if disy == 0:
+                if dir2 == "E":
+                    deg = 90
+                else:
+                    deg = 270
+                dir1 = ""
+            if disx == disy == 0:
+                deg = 0
             direct = str(deg) + "\u00B0  " + dir1 + dir2
             dist = round(math.sqrt((disx ** 2) + (disy ** 2)), 2)
             dist2mile = round((dist / self.padx * 3.2), 2)
@@ -432,9 +446,7 @@ class WorkerThread(QThread):
                     for row in reader:
                         pass
                     self.up_Tracking.emit(str(round(float(row[1]), 6)),
-                                          str(round(float(row[2]), 6)),
-                                          row[3] + " m",
-                                          row[4] + " \u00B0")
+                                          str(round(float(row[2]), 6)))
             except:
                 pass
 
@@ -456,7 +468,6 @@ class WorkerThread(QThread):
 
             self.c = not self.c
             time.sleep(0.1)
-
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
