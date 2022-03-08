@@ -16,6 +16,7 @@ from PyQt5.QtGui import QImage, QPixmap
 
 from PyQt5.QtWidgets import *
 
+
 class RDT_GS_GUI(QtWidgets.QMainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
@@ -50,10 +51,14 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         self.worker.up_Telemetry.connect(self.upTelemetry)
 
         # Tracker updates
-        #self.worker.up_Tracking.connect(self.upTracking)
+        # self.worker.up_Tracking.connect(self.upTracking)
         self.worker.up_TrackingTest.connect(self.upTrackingTest)
         self.armBut.clicked.connect(self.upArm)
         self.worker.up_Tracker.connect(self.upTracker)
+
+        # Signal
+        self.worker.up_sigIm.connect(self.upSignal)
+        self.worker.up_signal.connect(self.upSigval)
 
         # Graphing
         self.worker.up_GraphData.connect(self.drawGraphs)
@@ -107,7 +112,7 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         yrollr = list(map(int, yrollr))
 
         self.velG.clear()
-        self.velG.plot(timeD,yvel,pen=pg.mkPen('k', width=2))
+        self.velG.plot(timeD, yvel, pen=pg.mkPen('k', width=2))
 
         self.allaccG.clear()
         self.allaccG.plot(timeD, yacc, pen=pg.mkPen('k', width=2))
@@ -174,6 +179,13 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
     def upTracker(self, image):
         self.trackerimg.setPixmap(QPixmap.fromImage(image))
 
+    # Signal Strength
+    def upSignal(self, image):
+        self.sigStrength.setPixmap(QPixmap.fromImage(image))
+
+    def upSigval(self, val):
+        self.sigVal.setText(val + " dB")
+
     def upArm(self):
         if self.worker.armed:
             self.armBut.setStyleSheet("background-color:#37FF4F;")
@@ -201,6 +213,7 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
         global trackFile
         trackFile = QFileDialog.getOpenFileName(self, 'Open File: Tracking', '', 'CSV Files (*.csv)')[0]
 
+
 class WorkerThread(QThread):
     # Module Status
     up_Module = pyqtSignal(str, str, str, str)
@@ -225,7 +238,13 @@ class WorkerThread(QThread):
     # Graphing
     up_GraphData = pyqtSignal(list, list, list, list, list, list, list)
 
+    # Signal
+    up_signal = pyqtSignal(str)
+    up_sigIm = pyqtSignal(QImage)
+
     METstart = time.time()
+
+    # Tracking
     topl = (37.2138385, -97.797595)
     botl = (37.1223676, -97.7968443)
     topr = (37.2117854, -97.6806518)
@@ -245,20 +264,37 @@ class WorkerThread(QThread):
     mrpix = [padx, pady]  # Recent pixel cords matrix
     mrcord = [round(lp[0], 4), round(lp[1], 4)]  # Recent cords matrix
 
+    # Signal
+    sigVal = 0
+
     def run(self):
         sat = cv2.imread("imgs/sat3.PNG")
+        sig = cv2.imread("imgs/signalBar.jpg")
         while True:
-            print(self.mrpix)
             if self.armed:
                 if keyboard.is_pressed('down'):
-                    self.mrpix[1] = self.mrpix[1] + 2
+                    self.mrpix[1] += 3
                 if keyboard.is_pressed('up'):
-                    self.mrpix[1] -= 2
+                    self.mrpix[1] -= 3
                 if keyboard.is_pressed('left'):
-                    self.mrpix[0] -= 2
+                    self.mrpix[0] -= 3
                 if keyboard.is_pressed('right'):
-                    self.mrpix[0] += 2
+                    self.mrpix[0] += 3
+
             newsat = sat.copy()
+            newsig = sig.copy()
+            if keyboard.is_pressed('a'):
+                self.sigVal -= 1
+            if keyboard.is_pressed('d'):
+                self.sigVal += 1
+            sigX = int(round(self.sigVal/10 * 300))
+            cv2.line(newsig, (sigX, 0), (sigX, 80), (10, 10, 10), 3)
+            image2 = imutils.resize(newsig, width=300, height=20)
+            frame2 = cv2.cvtColor(image2, cv2.COLOR_BGR2RGB)
+            image2 = QImage(frame2, frame2.shape[1], frame2.shape[0], frame2.strides[0], QImage.Format_RGB888)
+            self.up_sigIm.emit(image2)
+            self.up_signal.emit(str(self.sigVal))
+
             # Draw Compass
             cv2.line(sat, (30, 750), (90, 750), (10, 10, 10), 3)  # Hori
             cv2.line(sat, (60, 720), (60, 780), (10, 10, 10), 3)  # Vert
@@ -269,8 +305,8 @@ class WorkerThread(QThread):
 
             disx = self.mrpix[0] - self.padx
             disy = self.mrpix[1] - self.pady
-            mrcordLA = round(abs((self.mrpix[1]/self.ymax)*(self.botlat - self.toplat) + self.toplat), 4)
-            mrcordLO = round(((self.mrpix[0]/self.xmax)*(self.rightlon - self.leftlon) + self.leftlon), 4)
+            mrcordLA = round(abs((self.mrpix[1] / self.ymax) * (self.botlat - self.toplat) + self.toplat), 4)
+            mrcordLO = round(((self.mrpix[0] / self.xmax) * (self.rightlon - self.leftlon) + self.leftlon), 4)
 
             try:
                 deg = round((math.degrees(math.atan(disy / disx))))
@@ -297,26 +333,26 @@ class WorkerThread(QThread):
             direct = str(deg) + "\u00B0  " + dir1 + dir2
             dist = round(math.sqrt((disx ** 2) + (disy ** 2)), 2)
             dist2mile = round((dist / self.padx * 3.2), 2)
-            dist2meters = round((dist2mile * 1609.34),2)
-            cv2.line(newsat, (self.padx, self.pady), self.mrpix, (0, 240, 255), 3)  # Distance line
+            dist2meters = round((dist2mile * 1609.34), 2)
+            cv2.line(newsat, (self.padx, self.pady), self.mrpix, (0, 240, 255), 5)  # Distance line
 
             # Drawing location dot
-            cv2.circle(sat, (405, 405), 3, (0, 255, 0), 5) #Launch Pad Location
-            cv2.circle(sat, self.mrpix, 1, (0, 120, 255), 5)  # Tracked path
-            cv2.circle(newsat, self.mrpix, 1, (0, 0, 255), 5)  # Recent cords
+            cv2.circle(sat, (405, 405), 3, (0, 255, 0), 5)  # Launch Pad Location
+            cv2.circle(sat, self.mrpix, 2, (0, 120, 255), 5)  # Tracked path
+            cv2.circle(newsat, self.mrpix, 3, (0, 0, 255), 5)  # Recent cords
             if self.armed:
                 if self.blinkc % 10 < 5:  # Blinking dot border
-                    cv2.circle(newsat, self.mrpix, 12, (0, 0, 255), 2)
-                    cv2.circle(newsat, self.mrpix, 2, (0, 0, 255), 5)
+                    cv2.circle(newsat, self.mrpix, 15, (30, 30, 255), 3)
+                    cv2.circle(newsat, self.mrpix, 3, (30, 30, 255), 5)
             else:
-                cv2.circle(newsat, self.mrpix, 12, (0, 0, 255), 2)
-                cv2.circle(newsat, self.mrpix, 2, (0, 0, 255), 5)
+                cv2.circle(newsat, self.mrpix, 15, (0, 0, 255), 3)
+                cv2.circle(newsat, self.mrpix, 3, (0, 0, 255), 5)
             self.blinkc += 1
             self.up_TrackingTest.emit(mrcordLA, mrcordLO, dist2meters, direct)
 
-            image = imutils.resize(newsat,width=357)
+            image = imutils.resize(newsat, width=357)
             frame = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            image = QImage(frame, frame.shape[1],frame.shape[0],frame.strides[0],QImage.Format_RGB888)
+            image = QImage(frame, frame.shape[1], frame.shape[0], frame.strides[0], QImage.Format_RGB888)
             self.up_Tracker.emit(image)
 
             if self.c:
@@ -347,7 +383,7 @@ class WorkerThread(QThread):
                         timeD.append(row[0])
                         yAlt.append(row[1])
                         yAlt2.append(row[2])
-                        altav = round((int(row[1]) + int(row[2]))/2)
+                        altav = round((int(row[1]) + int(row[2])) / 2)
                         yAltAv.append(str(altav))
                         yVel.append(row[3])
                         yAcc.append(row[4])
@@ -420,6 +456,7 @@ class WorkerThread(QThread):
 
             self.c = not self.c
             time.sleep(0.1)
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
