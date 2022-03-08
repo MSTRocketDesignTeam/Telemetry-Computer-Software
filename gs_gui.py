@@ -28,9 +28,18 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
 
         dateL = date.today().strftime("%m / %d / %Y")
         self.date.setText(dateL)
+        self.armBut.setStyleSheet("background-color:#37FF4F;")
 
         self.worker = WorkerThread()
         self.worker.start()
+
+        self.armBut.setStyleSheet("background-color:#37FF4F;")
+        if self.worker.armed:
+            self.armBut.setStyleSheet("background-color:#FF3737;");
+            self.armBut.setText("Disarm")
+        else:
+            self.armBut.setStyleSheet("background-color:#37FF4F;");
+            self.armBut.setText("Arm")
 
         # Module Status updates
         self.worker.up_Module.connect(self.upModule)
@@ -172,12 +181,12 @@ class RDT_GS_GUI(QtWidgets.QMainWindow):
 
     def upArm(self):
         if self.worker.armed:
-            self.armBut.setStyleSheet('background-color: red')
-            self.armBut.setText("Disarm")
+            self.armBut.setStyleSheet("background-color:#37FF4F;")
+            self.armBut.setText("Arm")
             self.worker.armed = False
         else:
-            self.armBut.setStyleSheet('background-color: green')
-            self.armBut.setText("Arm")
+            self.armBut.setStyleSheet("background-color:#FF3737;")
+            self.armBut.setText("Disarm")
             self.worker.armed = True
 
     # Obtain file source for all data values
@@ -281,11 +290,14 @@ class WorkerThread(QThread):
             cv2.circle(sat, (405, 405), 3, (0, 255, 0), 5) #Launch Pad Location
             cv2.circle(sat, mrpix, 1, (0, 120, 255), 5)  # Tracked path
             cv2.circle(newsat, mrpix, 1, (0, 0, 255), 5)  # Recent cords
-            if self.blinkc % 10 < 5:  # Blinking dot border
+            if self.armed:
+                if self.blinkc % 10 < 5:  # Blinking dot border
+                    cv2.circle(newsat, mrpix, 12, (0, 0, 255), 2)
+                    cv2.circle(newsat, mrpix, 2, (0, 0, 255), 5)
+            else:
                 cv2.circle(newsat, mrpix, 12, (0, 0, 255), 2)
                 cv2.circle(newsat, mrpix, 2, (0, 0, 255), 5)
             self.blinkc += 1
-
             self.up_TrackingTest.emit(mrcord[0], mrcord[1], dist2meters, direct)
 
             image = imutils.resize(newsat,width=357)
@@ -305,7 +317,6 @@ class WorkerThread(QThread):
                 pyro = "Inactive"
 
             self.up_Module.emit(dataacqst, telemst, power, pyro)
-
 
             try:
                 with open(dataFile, "r") as file:
