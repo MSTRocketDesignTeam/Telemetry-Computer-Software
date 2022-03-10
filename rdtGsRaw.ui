@@ -112,7 +112,7 @@ padding: 10px;</string>
            <string notr="true">font: 10pt &quot;Arial Rounded MT Bold&quot;;</string>
           </property>
           <property name="text">
-           <string>Receive Signal Strength:</string>
+           <string>Received Signal Strength:</string>
           </property>
          </widget>
         </item>
@@ -895,14 +895,9 @@ padding: 10px;</string>
      <height>21</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>File</string>
-    </property>
-   </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
-     <string>Edit</string>
+     <string>File</string>
     </property>
     <widget class="QMenu" name="menuChoose_File">
      <property name="statusTip">
@@ -918,7 +913,6 @@ padding: 10px;</string>
     </widget>
     <addaction name="menuChoose_File"/>
    </widget>
-   <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
   </widget>
   <action name="actionData">
@@ -944,6 +938,14 @@ padding: 10px;</string>
   <action name="actionTracking">
    <property name="text">
     <string>Tracking</string>
+   </property>
+  </action>
+  <action name="actionClose">
+   <property name="text">
+    <string>Close</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
    </property>
   </action>
  </widget>

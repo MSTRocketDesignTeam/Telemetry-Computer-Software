@@ -272,22 +272,22 @@ class WorkerThread(QThread):
         sig = cv2.imread("imgs/signalBar.jpg")
         while True:
             if self.armed:
-                if keyboard.is_pressed('down'):
+                if keyboard.is_pressed('s'):
                     self.mrpix[1] += 3
-                if keyboard.is_pressed('up'):
+                if keyboard.is_pressed('w'):
                     self.mrpix[1] -= 3
-                if keyboard.is_pressed('left'):
+                if keyboard.is_pressed('a'):
                     self.mrpix[0] -= 3
-                if keyboard.is_pressed('right'):
+                if keyboard.is_pressed('d'):
                     self.mrpix[0] += 3
 
             newsat = sat.copy()
             newsig = sig.copy()
-            if keyboard.is_pressed('a'):
+            if keyboard.is_pressed('left'):
                 self.sigVal -= 1
-            if keyboard.is_pressed('d'):
+            if keyboard.is_pressed('right'):
                 self.sigVal += 1
-            sigX = int(round(self.sigVal/10 * 300))
+            sigX = int(round((self.sigVal - (-120))/140 * 600))
             cv2.line(newsig, (sigX, 0), (sigX, 80), (10, 10, 10), 3)
             image2 = imutils.resize(newsig, width=300, height=20)
             frame2 = cv2.cvtColor(image2, cv2.COLOR_BGR2RGB)
