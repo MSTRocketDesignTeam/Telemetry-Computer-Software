@@ -364,7 +364,7 @@ class WorkerThread(QThread):
             self.blinkc += 1
             self.up_TrackingTest.emit(mrcordLA, mrcordLO, dist2meters, direct)
 
-            image = imutils.resize(newsat, width=357)
+            image = imutils.resize(newsat, width=432)
             frame = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             image = QImage(frame, frame.shape[1], frame.shape[0], frame.strides[0], QImage.Format_RGB888)
             self.up_Tracker.emit(image)
